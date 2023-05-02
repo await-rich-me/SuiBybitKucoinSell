@@ -1,44 +1,56 @@
 {
   "account1":
-      {
+     {
         "kucoin": {
-        "apiKey": "",
-        "secret": "",
-        "password": "",
-        "proxies":  {
-        "https": ""}},
+          "apiKey": "",
+          "secret": "",
+          "password": "",
+          "proxies":  {
+          "https": ""
+          }
+          },
       "bybit": {
         "apiKey": "",
         "secret": "",
         "proxies": {
-          "https": ""}}
-      },
+          "https": ""
+        }
+       }
+     },
   "account2":
       {
         "kucoin": {
-        "apiKey": "",
-        "secret": "",
-        "password": "",
-        "proxies":  {
-        "https": ""}},
+          "apiKey": "",
+          "secret": "",
+          "password": "",
+          "proxies":  {
+            "https": ""
+          }
+        },
       "bybit": {
         "apiKey": "",
         "secret": "",
         "proxies": {
-          "https": ""}}
+          "https": ""
+        }
+       }
       },
   "account3":
       {
         "kucoin": {
-        "apiKey": "",
-        "secret": "",
-        "password": "",
-        "proxies":  {
-        "https": ""}},
+          "apiKey": "",
+          "secret": "",
+          "password": "",
+          "proxies":  {
+            "https": ""
+          }
+        },
       "bybit": {
         "apiKey": "",
         "secret": "",
         "proxies": {
-          "https": ""}}
-      }
+          "https": ""
+          }
+       }
+    }
 }
