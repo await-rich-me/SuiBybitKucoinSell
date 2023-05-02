@@ -1,7 +1,7 @@
 {
-  "range_start": от какой цены,
-  "range_end": до какой цены,
-  "insta_sell": мгновенная продажа,
-  "percent": процент(смотри readme чтобы понять что это),
-  "max_time_in_range": время в секундах(смотри readme чтобы понять что это)
+  "range_start": 2,
+  "range_end": 3,
+  "insta_sell": 4,
+  "percent": 0.97,
+  "max_time_in_range": 5
 }
