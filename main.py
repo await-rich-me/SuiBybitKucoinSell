@@ -2,15 +2,17 @@ import asyncio
 import datetime
 from loguru import logger
 import services
-
+import time
 
 
 async def get_last_prices(exchanges_set):
-
-    """Получаем цены нашего коина с каждой биржи"""
-    tasks = [exchange[0].fetch_ticker('SUI/USDT') for exchange in exchanges_set]
-    results = await asyncio.gather(*tasks)
-    return results
+    try:
+        """Получаем цены нашего коина с каждой биржи"""
+        tasks = [exchange[0].fetch_ticker('SUI/USDT') for exchange in exchanges_set]
+        results = await asyncio.gather(*tasks)
+        return results
+    except Exception as e:
+        logger.error(f'{e}')
 
 async def check_price(exchanges, exchanges_set, range_start, range_end,insta_sell,percent, max_time_in_range):
     """
@@ -26,32 +28,34 @@ async def check_price(exchanges, exchanges_set, range_start, range_end,insta_sel
         current_price = price['last']
 
         exchange_id = exchanges_set[count][0].id
+        try:
+            if current_price >= insta_sell:
+                logger.info(f'{exchange_id} --- {current_price} --- Сливаю по инста прайсу')
 
-        if current_price >= insta_sell:
-            logger.info(f'{exchange_id} --- {current_price} --- Сливаю по инста прайсу')
-
-            for exchange in exchanges[exchange_id]:
-                to_sell.append(limit_sell_order(exchange, 'SUI/USDT', current_price*percent))
-
-        elif range_start <= current_price <= range_end:
-            datetime_now = datetime.datetime.now()
-
-            if exchanges_set[count][1] == 0:
-                lst = list(exchanges_set[count])
-                lst[1] = datetime_now
-                exchanges_set[count] = tuple(lst)
-
-            duration_time = (datetime_now - exchanges_set[count][1]).seconds
-            logger.info(f'{exchange_id} --- {current_price} --- Цена в диапазоне {duration_time}с / {max_time_in_range}c')
-
-
-            if duration_time > max_time_in_range:
                 for exchange in exchanges[exchange_id]:
                     to_sell.append(limit_sell_order(exchange, 'SUI/USDT', current_price*percent))
-        elif insta_sell > current_price > range_end:
-            logger.info(f'{exchange_id} --- {current_price} --- Цена больше диапазона')
-        else:
-            logger.info(f'{exchange_id} --- {current_price} --- Цена меньше диапазона')
+
+            elif range_start <= current_price <= range_end:
+                datetime_now = datetime.datetime.now()
+
+                if exchanges_set[count][1] == 0:
+                    lst = list(exchanges_set[count])
+                    lst[1] = datetime_now
+                    exchanges_set[count] = tuple(lst)
+
+                duration_time = (datetime_now - exchanges_set[count][1]).seconds
+                logger.info(f'{exchange_id} --- {current_price} --- Цена в диапазоне {duration_time}с / {max_time_in_range}c')
+
+
+                if duration_time > max_time_in_range:
+                    for exchange in exchanges[exchange_id]:
+                        to_sell.append(limit_sell_order(exchange, 'SUI/USDT', current_price*percent))
+            elif insta_sell > current_price > range_end:
+                logger.info(f'{exchange_id} --- {current_price} --- Цена больше диапазона')
+            else:
+                logger.info(f'{exchange_id} --- {current_price} --- Цена меньше диапазона')
+        except Exception as e:
+            logger.error(f"{e}")
 
     await asyncio.gather(*to_sell)
 
@@ -91,9 +95,11 @@ async def main():
     if not range_start or not range_end or not max_time_in_range:
         return logger.error('Добавьте данные о ценах в файл `prices.json`')
 
-
     while True:
-        await check_price(exchanges, exchanges_set, range_start, range_end,insta_sell, percent,max_time_in_range)
+        try:
+            await check_price(exchanges, exchanges_set, range_start, range_end, insta_sell, percent, max_time_in_range)
+        except Exception:
+            time.sleep(0.1)
 
 
 if __name__ == '__main__':

@@ -14,10 +14,11 @@ async def api_settings():
     with open('api.json') as file:
         api_data = json.load(file)
 
+    check_tasks = []
     while api_data.get(f'account{count}'):
         account_data = api_data.get(f'account{count}', {})
         
-        check_tasks = []
+
 
         kucoin_data = account_data.get('kucoin', {})
         if kucoin_data.get('apiKey') and kucoin_data.get('secret') and kucoin_data.get('password') and kucoin_data.get('proxies'):
@@ -44,15 +45,17 @@ async def api_settings():
 
 async def checkAndTransfer(exchange):
     balance = await exchange.fetch_balance({'type': 'funding'})
+    try:
+        if 'SUI' in balance:
+            amount = balance.get('SUI').get('free')
 
-    if 'SUI' in balance:
-        amount = balance.get('SUI').get('free')
-
-        if amount > 0:
-            await exchange.transfer('SUI', amount, 'funding', 'spot')
-            logger.info(f"Отправил SUI на спот")
-        else:
-            logger.info(f'SUI уже на споте')
+            if amount > 0:
+                await exchange.transfer('SUI', amount, 'funding', 'spot')
+                logger.info(f"Отправил SUI на спот")
+            else:
+                logger.info(f'SUI уже на споте')
+    except Exception as e:
+        logger.error(f'{e}')
 
 
 def price_settings():
