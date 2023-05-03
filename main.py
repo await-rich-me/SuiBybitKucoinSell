@@ -48,6 +48,8 @@ async def check_price(exchanges, exchanges_set, range_start, range_end,insta_sel
             if duration_time > max_time_in_range:
                 for exchange in exchanges[exchange_id]:
                     to_sell.append(limit_sell_order(exchange, 'SUI/USDT', current_price*percent))
+        elif insta_sell > current_price > range_end:
+            logger.info(f'{exchange_id} --- {current_price} --- Цена больше диапазона')
         else:
             logger.info(f'{exchange_id} --- {current_price} --- Цена меньше диапазона')
 
