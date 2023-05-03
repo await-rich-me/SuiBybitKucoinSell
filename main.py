@@ -1,13 +1,12 @@
 import asyncio
 import datetime
-import time
-
 from loguru import logger
 import services
 import time
 
+
 async def get_last_prices(exchanges_set):
-try:
+    try:
         """Получаем цены нашего коина с каждой биржи"""
         tasks = [exchange[0].fetch_ticker('SUI/USDT') for exchange in exchanges_set]
         results = await asyncio.gather(*tasks)
@@ -16,7 +15,7 @@ try:
         logger.error(f'{e}')
 
 
-async def check_price(exchanges, exchanges_set, range_start, range_end,insta_sell,percent, max_time_in_range):
+async def check_price(exchanges, exchanges_set, range_start, range_end, insta_sell, percent, max_time_in_range):
     """
     Выставляем ордера на продажу,
     если цена превысила диапазон или цена находится в диапазоне max_time_in_range секунд
@@ -46,12 +45,13 @@ async def check_price(exchanges, exchanges_set, range_start, range_end,insta_sel
                     exchanges_set[count] = tuple(lst)
 
                 duration_time = (datetime_now - exchanges_set[count][1]).seconds
-                logger.info(f'{exchange_id} --- {current_price} --- Цена в диапазоне {duration_time}с / {max_time_in_range}c')
+                logger.info(f'{exchange_id} --- {current_price} --- '
+                            f'Цена в диапазоне {duration_time}с / {max_time_in_range}c')
 
-            if duration_time > max_time_in_range:
-                for exchange in exchanges[exchange_id]:
-                    to_sell.append(limit_sell_order(exchange, 'SUI/USDT', current_price*percent))
-        elif insta_sell > current_price > range_end:
+                if duration_time > max_time_in_range:
+                    for exchange in exchanges[exchange_id]:
+                        to_sell.append(limit_sell_order(exchange, 'SUI/USDT', current_price*percent))
+            elif insta_sell > current_price > range_end:
                 logger.info(f'{exchange_id} --- {current_price} --- Цена больше диапазона')
             else:
                 logger.info(f'{exchange_id} --- {current_price} --- Цена меньше диапазона')
@@ -62,7 +62,7 @@ async def check_price(exchanges, exchanges_set, range_start, range_end,insta_sel
 
 
 async def limit_sell_order(exchange, symbol, price):
-    """Создаём ордер на продажу всего баланса по текущей цене минус какой то процент"""
+    """Создаём ордер на продажу всего баланса по текущей цене минус какой-то процент"""
 
     balance = await exchange[1].fetch_balance({'type': 'spot'})
 
@@ -78,9 +78,9 @@ async def limit_sell_order(exchange, symbol, price):
                 price,
             )
             balance = await exchange[1].fetch_balance({'type': 'spot'})
-            availableamount = balance.get('SUI').get('free')
-            usdtamount = balance.get('USDT').get('free')
-            logger.info(F'{exchange[0]} {exchange[1]} остаток SUI - {availableamount}, баланс USDT - {usdtamount}')
+            available_amount = balance.get('SUI').get('free')
+            usdt_amount = balance.get('USDT').get('free')
+            logger.info(F'{exchange[0]} {exchange[1]} остаток SUI - {available_amount}, баланс USDT - {usdt_amount}')
         except Exception as e:
             return logger.error(f'Не удалось создать ордер в {exchange[1].id}. {e}')
 
@@ -96,7 +96,7 @@ async def main():
 
     while True:
         try:
-            await check_price(exchanges, exchanges_set, range_start, range_end, insta_sell, percent,max_time_in_range)
+            await check_price(exchanges, exchanges_set, range_start, range_end, insta_sell, percent, max_time_in_range)
         except Exception as e:
             logger.error(f'Error : {e}')
             time.sleep(0.1)
