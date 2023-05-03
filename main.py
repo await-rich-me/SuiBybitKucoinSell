@@ -1,20 +1,21 @@
 import asyncio
 import datetime
+import time
+
 from loguru import logger
 import services
 
 
-
 async def get_last_prices(exchanges_set):
-
     """Получаем цены нашего коина с каждой биржи"""
     tasks = [exchange[0].fetch_ticker('SUI/USDT') for exchange in exchanges_set]
     results = await asyncio.gather(*tasks)
     return results
 
+
 async def check_price(exchanges, exchanges_set, range_start, range_end,insta_sell,percent, max_time_in_range):
     """
-    Выставялем ордера на продажу,
+    Выставляем ордера на продажу,
     если цена превысила диапазон или цена находится в диапазоне max_time_in_range секунд
     """
 
@@ -44,7 +45,6 @@ async def check_price(exchanges, exchanges_set, range_start, range_end,insta_sel
             duration_time = (datetime_now - exchanges_set[count][1]).seconds
             logger.info(f'{exchange_id} --- {current_price} --- Цена в диапазоне {duration_time}с / {max_time_in_range}c')
 
-
             if duration_time > max_time_in_range:
                 for exchange in exchanges[exchange_id]:
                     to_sell.append(limit_sell_order(exchange, 'SUI/USDT', current_price*percent))
@@ -57,13 +57,11 @@ async def check_price(exchanges, exchanges_set, range_start, range_end,insta_sel
 async def limit_sell_order(exchange, symbol, price):
     """Создаём ордер на продажу всего баланса по текущей цене минус какой то процент"""
 
-    balance = await exchange[1].fetch_balance({'type':'spot'})
+    balance = await exchange[1].fetch_balance({'type': 'spot'})
 
     amount = balance.get('SUI').get('free')
 
     if amount > 0.1:
-
-
         try:
             logger.info(f'{exchange[0]} cоздаём ордер на продажу в {exchange[1].id}. Amount = {amount} Price = {price}')
 
@@ -83,16 +81,18 @@ async def limit_sell_order(exchange, symbol, price):
 async def main():
     exchanges, exchanges_set = await services.api_settings()
     if not exchanges:
-        return  logger.error('Добавьте данные о биржах в файл `api.json`')
+        return logger.error('Добавьте данные о биржах в файл `api.json`')
 
     range_start, range_end, insta_sell, max_time_in_range, percent = services.price_settings()
     if not range_start or not range_end or not max_time_in_range:
         return logger.error('Добавьте данные о ценах в файл `prices.json`')
 
-
     while True:
-        await check_price(exchanges, exchanges_set, range_start, range_end,insta_sell, percent,max_time_in_range)
-
+        try:
+            await check_price(exchanges, exchanges_set, range_start, range_end, insta_sell, percent,max_time_in_range)
+        except Exception as e:
+            logger.error(f'Error : {e}')
+            time.sleep(0.1)
 
 if __name__ == '__main__':
     asyncio.run(main())

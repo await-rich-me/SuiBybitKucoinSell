@@ -2,6 +2,7 @@ import asyncio
 import ccxt.async_support as ccxt
 import json
 from loguru import logger
+check_tasks = []
 
 
 async def api_settings():
@@ -28,7 +29,7 @@ async def api_settings():
             exchanges_set.add((ccxt.kucoin(), 0))
 
         bybit_data = account_data.get('bybit', {})
-        if bybit_data.get('apiKey') and bybit_data.get('secret') and bybit_data.get('proxies'):
+        if bybit_data.get('apiKey') and bybit_data.get('secret'):  # and bybit_data.get('proxies'):
 
             exchange = ccxt.bybit(bybit_data)
             check_tasks.append(checkAndTransfer(exchange))
