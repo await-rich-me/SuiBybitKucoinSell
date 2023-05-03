@@ -18,14 +18,13 @@ async def api_settings():
     check_tasks = []
     while api_data.get(f'account{count}'):
         account_data = api_data.get(f'account{count}', {})
-        
-
 
         kucoin_data = account_data.get('kucoin', {})
-        if kucoin_data.get('apiKey') and kucoin_data.get('secret') and kucoin_data.get('password') and kucoin_data.get('proxies'):
+        if kucoin_data.get('apiKey') and kucoin_data.get('secret') and kucoin_data.get('password') \
+                and kucoin_data.get('proxies'):
 
             exchange = ccxt.kucoin(kucoin_data)
-            check_tasks.append(checkAndTransfer(exchange))
+            check_tasks.append(check_and_transfer(exchange))
             exchanges.setdefault('kucoin', []).append((f'account{count}', exchange))
             exchanges_set.add((ccxt.kucoin(), 0))
 
@@ -33,7 +32,7 @@ async def api_settings():
         if bybit_data.get('apiKey') and bybit_data.get('secret'):  # and bybit_data.get('proxies'):
 
             exchange = ccxt.bybit(bybit_data)
-            check_tasks.append(checkAndTransfer(exchange))
+            check_tasks.append(check_and_transfer(exchange))
             exchanges.setdefault('bybit', []).append((f'account{count}', exchange))
             exchanges_set.add((ccxt.bybit(), 0))
 
@@ -44,7 +43,7 @@ async def api_settings():
     return exchanges, list(exchanges_set)
 
 
-async def checkAndTransfer(exchange):
+async def check_and_transfer(exchange):
     balance = await exchange.fetch_balance({'type': 'funding'})
     try:
         if 'SUI' in balance:
